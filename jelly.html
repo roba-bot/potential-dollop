@@ -2,74 +2,162 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Jelly</title>
+    <title>Soft Body Jelly</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #000; }
+        body { margin: 0; overflow: hidden; background: #2d3436; cursor: grab; }
+        body.grabbing { cursor: grabbing; }
         canvas { display: block; }
+        .hint { position: absolute; top: 20px; width: 100%; text-align: center; color: #636e72; font-family: sans-serif; pointer-events: none; user-select: none; }
     </style>
 </head>
 <body>
+    <div class="hint">Тяни и бросай</div>
     <canvas id="c"></canvas>
     <script>
         const canvas = document.getElementById('c');
         const ctx = canvas.getContext('2d');
         let w, h;
-        let mx = 0, my = 0;
-        
-        function rz() { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; }
-        window.onresize = rz;
-        rz();
-        
-        window.onmousemove = e => { mx = e.clientX; my = e.clientY; };
-        
-        let ball = { x: w/2, y: h/2, vx: 0, vy: 0, r: 80 };
-        const pts = [];
-        const num = 16;
-        
-        for(let i=0; i<num; i++) pts.push({ x: 0, y: 0, vx: 0, vy: 0 });
+        const nodes = [];
+        const numNodes = 16;
+        const radius = 100;
+        const springStrength = 0.1;
+        const friction = 0.92;
+        const gravity = 0.5;
+        let mouse = { x: 0, y: 0, down: false };
+        let draggedNode = null;
 
-        function anim() {
-            ctx.fillStyle = 'rgba(0,0,0,0.2)';
-            ctx.fillRect(0,0,w,h);
+        function resize() {
+            w = canvas.width = window.innerWidth;
+            h = canvas.height = window.innerHeight;
+            init();
+        }
+        
+        function init() {
+            nodes.length = 0;
+            const cx = w / 2;
+            const cy = h / 2;
+            for (let i = 0; i < numNodes; i++) {
+                const theta = (Math.PI * 2 / numNodes) * i;
+                nodes.push({
+                    x: cx + Math.cos(theta) * radius,
+                    y: cy + Math.sin(theta) * radius,
+                    vx: 0, vy: 0,
+                    ox: Math.cos(theta) * radius, 
+                    oy: Math.sin(theta) * radius 
+                });
+            }
+        }
+
+        window.addEventListener('resize', resize);
+        window.addEventListener('mousedown', e => {
+            mouse.down = true;
+            document.body.classList.add('grabbing');
+            let minDist = 1000;
+            nodes.forEach((n, i) => {
+                const dx = n.x - e.clientX;
+                const dy = n.y - e.clientY;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                if (dist < minDist && dist < 100) {
+                    minDist = dist;
+                    draggedNode = i;
+                }
+            });
+        });
+        
+        window.addEventListener('mouseup', () => {
+            mouse.down = false;
+            draggedNode = null;
+            document.body.classList.remove('grabbing');
+        });
+        
+        window.addEventListener('mousemove', e => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+        });
+
+        function update() {
+            let cx = 0, cy = 0;
+            nodes.forEach(n => { cx += n.x; cy += n.y; });
+            cx /= numNodes;
+            cy /= numNodes;
+
+            for (let i = 0; i < numNodes; i++) {
+                let n = nodes[i];
+
+                if (mouse.down && draggedNode === i) {
+                    n.x = mouse.x;
+                    n.y = mouse.y;
+                    n.vx = 0; n.vy = 0;
+                    continue;
+                }
+
+                let tx = cx + n.ox;
+                let ty = cy + n.oy;
+                
+                n.vx += (tx - n.x) * springStrength;
+                n.vy += (ty - n.y) * springStrength;
+                
+                let prev = nodes[(i - 1 + numNodes) % numNodes];
+                let next = nodes[(i + 1) % numNodes];
+                
+                let dx = (prev.x + next.x) / 2 - n.x;
+                let dy = (prev.y + next.y) / 2 - n.y;
+                
+                n.vx += dx * 0.4;
+                n.vy += dy * 0.4;
+
+                n.vy += gravity;
+
+                n.vx *= friction;
+                n.vy *= friction;
+                n.x += n.vx;
+                n.y += n.vy;
+
+                if (n.y > h - 10) { n.y = h - 10; n.vy *= -0.8; n.vx *= 0.8; }
+                if (n.y < 10) { n.y = 10; n.vy *= -0.8; }
+                if (n.x > w - 10) { n.x = w - 10; n.vx *= -0.8; }
+                if (n.x < 10) { n.x = 10; n.vx *= -0.8; }
+            }
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, w, h);
             
-            ball.vx += (mx - ball.x) * 0.03;
-            ball.vy += (my - ball.y) * 0.03;
-            ball.vx *= 0.9;
-            ball.vy *= 0.9;
-            ball.x += ball.vx;
-            ball.y += ball.vy;
-
             ctx.beginPath();
-            for(let i=0; i<num; i++) {
-                let p = pts[i];
-                let ang = (Math.PI * 2 / num) * i;
-                let tx = ball.x + Math.cos(ang) * ball.r;
-                let ty = ball.y + Math.sin(ang) * ball.r;
-                
-                p.vx += (tx - p.x) * 0.1;
-                p.vy += (ty - p.y) * 0.1;
-                
-                p.vx += ball.vx * -0.15; 
-                p.vy += ball.vy * -0.15;
+            let xc = (nodes[0].x + nodes[numNodes - 1].x) / 2;
+            let yc = (nodes[0].y + nodes[numNodes - 1].y) / 2;
+            ctx.moveTo(xc, yc);
 
-                p.vx *= 0.8; 
-                p.vy *= 0.8;
-                p.x += p.vx; 
-                p.y += p.vy;
-                
-                if (i===0) ctx.moveTo(p.x, p.y);
-                else ctx.lineTo(p.x, p.y);
+            for (let i = 0; i < numNodes; i++) {
+                let n = nodes[i];
+                let next = nodes[(i + 1) % numNodes];
+                xc = (n.x + next.x) / 2;
+                yc = (n.y + next.y) / 2;
+                ctx.quadraticCurveTo(n.x, n.y, xc, yc);
             }
             ctx.closePath();
-            ctx.fillStyle = '#2ed573';
+            
+            ctx.fillStyle = 'rgba(0, 230, 118, 0.6)';
             ctx.fill();
+            
             ctx.strokeStyle = '#fff';
-            ctx.lineWidth = 3;
+            ctx.lineWidth = 4;
             ctx.stroke();
 
-            requestAnimationFrame(anim);
+            ctx.beginPath();
+            ctx.fillStyle = 'white';
+            ctx.arc(nodes[0].x + 20, nodes[0].y + 20, 5, 0, Math.PI*2);
+            ctx.arc(nodes[3].x - 10, nodes[3].y + 10, 3, 0, Math.PI*2);
+            ctx.fill();
+
+            requestAnimationFrame(() => {
+                update();
+                draw();
+            });
         }
-        anim();
+
+        resize();
+        draw();
     </script>
 </body>
 </html>
