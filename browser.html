@@ -2,42 +2,116 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>NetScape 98</title>
+    <title>NetScape Navigator 4.0</title>
     <style>
-        body { background: #008080; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; font-family: 'Tahoma', sans-serif; }
-        .win { width: 90%; height: 90%; background: #c0c0c0; border: 2px solid; border-color: #fff #000 #000 #fff; box-shadow: 10px 10px 0 rgba(0,0,0,0.5); display: flex; flex-direction: column; }
-        .bar { background: linear-gradient(90deg, #000080, #1084d0); color: white; padding: 4px; font-weight: bold; display: flex; justify-content: space-between; }
-        .menu, .tools { padding: 5px; border-bottom: 2px solid #808080; display: flex; gap: 15px; font-size: 14px; }
-        .addr { padding: 5px; display: flex; gap: 5px; border-bottom: 2px solid #808080; align-items: center; }
-        input { flex: 1; border: 2px solid; border-color: #808080 #fff #fff #808080; padding: 2px; }
-        button { border: 2px solid; border-color: #fff #000 #000 #fff; background: #c0c0c0; cursor: pointer; }
-        button:active { border-color: #000 #fff #fff #000; }
-        .view { flex: 1; border: 2px solid; border-color: #808080 #fff #fff #808080; background: #fff; margin: 5px; overflow: hidden; position: relative; }
-        iframe { width: 100%; height: 100%; border: none; }
+        body { background: #008080; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow: hidden; }
+        .window { width: 95%; height: 95%; background: #c0c0c0; border: 2px solid; border-color: #dfdfdf #404040 #404040 #dfdfdf; box-shadow: 4px 4px 10px rgba(0,0,0,0.5); display: flex; flex-direction: column; }
+        .title-bar { background: linear-gradient(90deg, #000080, #1084d0); color: white; padding: 4px 8px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; font-family: sans-serif; font-size: 14px; }
+        .controls { display: flex; gap: 2px; }
+        .win-btn { width: 16px; height: 16px; background: #c0c0c0; border: 1px solid; border-color: #fff #000 #000 #fff; font-size: 10px; display: flex; justify-content: center; align-items: center; cursor: pointer; color: black; }
+        .toolbar { padding: 4px; border-bottom: 1px solid #808080; display: flex; flex-direction: column; gap: 4px; }
+        .menu-row { display: flex; gap: 15px; font-size: 13px; margin-bottom: 4px; }
+        .nav-row { display: flex; gap: 5px; align-items: center; }
+        .btn { padding: 4px 12px; border: 2px solid; border-color: #fff #404040 #404040 #fff; background: #c0c0c0; cursor: pointer; font-size: 12px; }
+        .btn:active { border-color: #404040 #fff #fff #404040; transform: translateY(1px); }
+        .address-bar { flex: 1; display: flex; align-items: center; background: white; border: 2px solid; border-color: #404040 #fff #fff #404040; padding: 2px; }
+        input { border: none; width: 100%; outline: none; font-family: monospace; font-size: 14px; }
+        .viewport { flex: 1; border: 2px solid; border-color: #404040 #fff #fff #404040; background: #fff; margin: 4px; position: relative; }
+        iframe { width: 100%; height: 100%; border: none; display: block; }
+        .status-bar { padding: 2px 5px; font-size: 12px; border-top: 1px solid #fff; border-color: #fff #404040 #404040 #fff; inset: 2px solid; }
+        .error-msg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #fff; color: red; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: -1; }
     </style>
 </head>
 <body>
-    <div class="win">
-        <div class="bar"><span>NetScape Navigator</span><button style="width:20px;height:20px;line-height:12px;">X</button></div>
-        <div class="menu"><span>File</span><span>Edit</span><span>View</span><span>Go</span><span>Help</span></div>
-        <div class="addr">
-            <span>Location:</span>
-            <input type="text" id="url" value="welcome.html">
-            <button onclick="go()">Go</button>
+    <div class="window">
+        <div class="title-bar">
+            <span>NetScape Navigator - World Wide Web</span>
+            <div class="controls">
+                <div class="win-btn">_</div>
+                <div class="win-btn">□</div>
+                <div class="win-btn">X</div>
+            </div>
         </div>
-        <div class="view">
-            <iframe id="fr" srcdoc="<body style='font-family:serif; text-align:center; padding-top:50px;'><h1>Welcome to Web 1.0</h1><p>Most modern sites refuse to connect via iframe.</p><hr><p>Try simple queries.</p></body>"></iframe>
+        <div class="toolbar">
+            <div class="menu-row">
+                <span>File</span><span>Edit</span><span>View</span><span>Go</span><span>Bookmarks</span><span>Options</span>
+            </div>
+            <div class="nav-row">
+                <button class="btn" onclick="nav('back')">Back</button>
+                <button class="btn" onclick="nav('fwd')">Forward</button>
+                <button class="btn" onclick="home()">Home</button>
+                <button class="btn" onclick="reload()">Reload</button>
+                <div style="width: 10px;"></div>
+                <span>Location:</span>
+                <div class="address-bar">
+                    <input type="text" id="url" value="wikipedia.org" onkeypress="handleKey(event)">
+                </div>
+                <button class="btn" onclick="loadUrl()">Go</button>
+            </div>
         </div>
+        <div class="viewport">
+            <div class="error-msg">
+                <h2>Connection Refused</h2>
+                <p>Modern site security prevents iframe loading.</p>
+                <p>Try: wikipedia.org, bing.com, example.com</p>
+            </div>
+            <iframe id="frame" src="https://www.wikipedia.org" onload="updateStatus()"></iframe>
+        </div>
+        <div class="status-bar" id="status">Document: Done</div>
     </div>
+
     <script>
-        const i = document.getElementById('fr');
-        const u = document.getElementById('url');
-        function go() {
-            let v = u.value;
-            if(!v.startsWith('http')) v = 'https://' + v;
-            try { i.src = v; } catch(e) {}
+        const frame = document.getElementById('frame');
+        const input = document.getElementById('url');
+        const status = document.getElementById('status');
+
+        function handleKey(e) {
+            if (e.key === 'Enter') loadUrl();
         }
-        u.addEventListener('keypress', e => { if(e.key === 'Enter') go(); });
+
+        function loadUrl() {
+            let val = input.value.trim();
+            status.innerText = "Connect: Contacting host...";
+            
+            if (!val.includes('.')) {
+                val = 'https://www.bing.com/search?q=' + encodeURIComponent(val);
+            } else {
+                if (!val.startsWith('http')) {
+                    val = 'https://' + val;
+                }
+            }
+            
+            // Фильтр для улучшения UX (многие сайты блочат iframe)
+            if (val.includes('google.com') || val.includes('youtube.com')) {
+                alert('NetScape Error: This site (Google/YT) blocks "Embedding".\nTry using Bing or Wikipedia inside this browser.');
+                status.innerText = "Error: Security Block";
+                return;
+            }
+
+            frame.src = val;
+            input.value = val;
+        }
+
+        function updateStatus() {
+            status.innerText = "Document: Done";
+        }
+        
+        function home() {
+            input.value = "wikipedia.org";
+            loadUrl();
+        }
+        
+        function reload() {
+            frame.contentWindow.location.reload();
+        }
+
+        function nav(dir) {
+            try {
+                if(dir === 'back') history.back(); 
+                // Ограничение: iframe history недоступна из-за CORS для большинства сайтов
+                else alert('Navigation limited in sandbox mode');
+            } catch(e) {}
+        }
     </script>
 </body>
 </html>
