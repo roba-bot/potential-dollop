@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ТЫ (YOU) | Официальный плеер</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #e50914;
+            --primary-glow: rgba(229, 9, 20, 0.5);
+            --bg-dark: #0a0a0a;
+            --bg-card: rgba(22, 22, 22, 0.7);
+            --bg-card-hover: rgba(40, 40, 40, 0.8);
+            --text-main: #ffffff;
+            --text-muted: #a3a3a3;
+            --glass-border: 1px solid rgba(255, 255, 255, 0.08);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(60, 10, 10, 0.4) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(40, 5, 5, 0.3) 0%, transparent 40%);
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f0f0f; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #333; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary); 
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px 40px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0 40px;
+            position: relative;
+        }
+
+        .logo-section {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo-text {
+            font-family: 'Oswald', sans-serif;
+            font-size: 3.5rem;
+            color: var(--primary);
+            text-transform: uppercase;
+            line-height: 1;
+            letter-spacing: 2px;
+            text-shadow: 0 0 20px rgba(229, 9, 20, 0.4);
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            margin-top: 5px;
+            text-transform: uppercase;
+        }
+
+        .current-playing-badge {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            padding: 10px 20px;
+            border-radius: 50px;
+            border: var(--glass-border);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.95rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .pulsing-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--primary);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--primary);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        .player-section {
+            position: relative;
+            margin-bottom: 50px;
+            border-radius: 16px;
+            padding: 4px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.01) 100%);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+        }
+        
+        .player-section::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            bottom: 20px;
+            background: var(--primary);
+            filter: blur(60px);
+            opacity: 0.15;
+            z-index: -1;
+        }
+
+        .player-wrapper {
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+            padding-bottom: 56.25%;
+        }
+
+        #videoPlayer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 30px;
+            align-items: start;
+        }
+
+        .glass-panel {
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: var(--glass-border);
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .section-title {
+            font-family: 'Oswald', sans-serif;
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .section-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(to right, rgba(229,9,20,0.5), transparent);
+        }
+
+        .season-tabs {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .season-tab {
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-muted);
+            padding: 16px 20px;
+            text-align: left;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .season-tab:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            padding-left: 25px;
+        }
+
+        .season-tab.active {
+            background: linear-gradient(90deg, rgba(229, 9, 20, 0.15) 0%, transparent 100%);
+            border-left: 3px solid var(--primary);
+            color: #fff;
+            padding-left: 25px;
+        }
+
+        .season-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        
+        .season-meta {
+            font-size: 0.8rem;
+            opacity: 0.6;
+        }
+
+        .episodes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 15px;
+        }
+
+        .episode-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid transparent;
+            border-radius: 10px;
+            padding: 15px;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .episode-card:hover {
+            transform: translateY(-5px);
+            background: var(--bg-card-hover);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .episode-card.active {
+            border: 1px solid var(--primary);
+            background: linear-gradient(135deg, rgba(229, 9, 20, 0.08) 0%, rgba(0,0,0,0) 100%);
+            box-shadow: 0 4px 20px rgba(229, 9, 20, 0.15);
+        }
+
+        .episode-card.active .episode-number {
+            color: var(--primary);
+        }
+
+        .episode-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .episode-number {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #666;
+            text-transform: uppercase;
+        }
+
+        .play-icon-mini {
+            opacity: 0;
+            color: var(--primary);
+            transition: var(--transition);
+            transform: scale(0.5);
+        }
+
+        .episode-card:hover .play-icon-mini,
+        .episode-card.active .play-icon-mini {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .episode-name {
+            font-weight: 600;
+            font-size: 1rem;
+            line-height: 1.4;
+            margin-bottom: 5px;
+            color: #eee;
+        }
+
+        .episode-date {
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .footer {
+            margin-top: 60px;
+            text-align: center;
+            padding: 30px;
+            color: #555;
+            font-size: 0.85rem;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+
+        @media (max-width: 900px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+            .header {
+                flex-direction: column;
+                text-align: center;
+                gap: 20px;
+            }
+            .container {
+                padding: 15px;
+            }
+            .logo-text {
+                font-size: 2.5rem;
+            }
+            .season-tabs {
+                flex-direction: row;
+                overflow-x: auto;
+                padding-bottom: 10px;
+            }
+            .season-tab {
+                min-width: 160px;
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 15px;
+            }
+            .season-tab:hover, .season-tab.active {
+                padding-left: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo-section">
+                <div class="logo-text">YOU</div>
+                <div class="subtitle">Психологический триллер</div>
+            </div>
+            <div class="current-playing-badge">
+                <div class="pulsing-dot"></div>
+                <div>
+                    <span style="color: #888; margin-right: 5px; font-size: 0.8em;">СЕЙЧАС ИГРАЕТ</span>
+                    <div style="font-weight: 600;">S<span id="headerSeason">1</span> E<span id="headerEpisode">10</span>: <span id="headerTitle" style="color: #ddd;">Bluebeard's Castle</span></div>
+                </div>
+            </div>
+        </header>
+
+        <section class="player-section">
+            <div class="player-wrapper">
+                <iframe 
+                    id="videoPlayer"
+                    src=""
+                    allow="autoplay; encrypted-media; fullscreen"
+                    allowfullscreen>
+                </iframe>
+            </div>
+        </section>
+
+        <div class="content-grid">
+            <aside class="glass-panel">
+                <h2 class="section-title"><i class="fas fa-layer-group" style="margin-right: 10px; font-size: 0.8em;"></i> СЕЗОНЫ</h2>
+                <div class="season-tabs">
+                    <button class="season-tab active" onclick="changeSeason(1)">
+                        <span class="season-name">Сезон 1</span>
+                        <span class="season-meta">2018</span>
+                    </button>
+                    <button class="season-tab" onclick="changeSeason(2)">
+                        <span class="season-name">Сезон 2</span>
+                        <span class="season-meta">2019</span>
+                    </button>
+                    <button class="season-tab" onclick="changeSeason(3)">
+                        <span class="season-name">Сезон 3</span>
+                        <span class="season-meta">2021</span>
+                    </button>
+                    <button class="season-tab" onclick="changeSeason(4)">
+                        <span class="season-name">Сезон 4</span>
+                        <span class="season-meta">2023</span>
+                    </button>
+                    <button class="season-tab" onclick="changeSeason(5)">
+                        <span class="season-name">Сезон 5</span>
+                        <span class="season-meta">2025</span>
+                    </button>
+                </div>
+            </aside>
+
+            <section class="glass-panel">
+                <h2 class="section-title" id="seasonTitle">
+                    <i class="fas fa-list-ul" style="margin-right: 10px; font-size: 0.8em;"></i> 
+                    <span>ЭПИЗОДЫ</span>
+                </h2>
+                <div class="episodes-grid" id="episodesGrid">
+                </div>
+            </section>
+        </div>
+
+        <footer class="footer">
+            <p>DESIGN CONCEPT FOR "YOU" SERIES</p>
+            <p style="opacity: 0.5; margin-top: 5px;">&copy; 2018-2025. Все права принадлежат правообладателям.</p>
+        </footer>
+    </div>
+
+    <script>
+        const seasonsData = {
+            1: {
+                episodes: [
+                    { number: 1, name: "Pilot", date: "09.09.2018" },
+                    { number: 2, name: "The Last Nice Guy in New York", date: "16.09.2018" },
+                    { number: 3, name: "Maybe", date: "23.09.2018" },
+                    { number: 4, name: "The Captain", date: "30.09.2018" },
+                    { number: 5, name: "Living with the Enemy", date: "07.10.2018" },
+                    { number: 6, name: "Amour Fou", date: "14.10.2018" },
+                    { number: 7, name: "Everythingship", date: "21.10.2018" },
+                    { number: 8, name: "You Got Me, Babe", date: "28.10.2018" },
+                    { number: 9, name: "Candace", date: "04.11.2018" },
+                    { number: 10, name: "Bluebeard's Castle", date: "11.11.2018" }
+                ]
+            },
+            2: {
+                episodes: [
+                    { number: 1, name: "A Fresh Start", date: "26.12.2019" },
+                    { number: 2, name: "Just the Tip", date: "26.12.2019" },
+                    { number: 3, name: "What Are Friends For?", date: "26.12.2019" },
+                    { number: 4, name: "The Good, the Bad, & the Hendy", date: "26.12.2019" },
+                    { number: 5, name: "Have a Good Wellkend, Joe!", date: "26.12.2019" },
+                    { number: 6, name: "Farewell, My Bunny", date: "26.12.2019" },
+                    { number: 7, name: "Ex-istential Crisis", date: "26.12.2019" },
+                    { number: 8, name: "Fear and Loathing in Beverly Hills", date: "26.12.2019" },
+                    { number: 9, name: "P.I. Joe", date: "26.12.2019" },
+                    { number: 10, name: "Love, Actually", date: "26.12.2019" }
+                ]
+            },
+            3: {
+                episodes: [
+                    { number: 1, name: "And They Lived Happily Ever After", date: "15.10.2021" },
+                    { number: 2, name: "So I Married an Axe Murderer", date: "15.10.2021" },
+                    { number: 3, name: "Missing White Woman Syndrome", date: "15.10.2021" },
+                    { number: 4, name: "Hands Across Madre Linda", date: "15.10.2021" },
+                    { number: 5, name: "Into the Woods", date: "15.10.2021" },
+                    { number: 6, name: "W.O.M.B.", date: "15.10.2021" },
+                    { number: 7, name: "We're All Mad Here", date: "15.10.2021" },
+                    { number: 8, name: "Swing and a Miss", date: "15.10.2021" },
+                    { number: 9, name: "Red Flag", date: "15.10.2021" },
+                    { number: 10, name: "What Is Love?", date: "15.10.2021" }
+                ]
+            },
+            4: {
+                episodes: [
+                    { number: 1, name: "Joe Takes a Holiday", date: "09.02.2023" },
+                    { number: 2, name: "Portrait of the Artist", date: "09.02.2023" },
+                    { number: 3, name: "Eat the Rich", date: "09.02.2023" },
+                    { number: 4, name: "Hampsie", date: "09.02.2023" },
+                    { number: 5, name: "The Fox and the Hound", date: "09.02.2023" },
+                    { number: 6, name: "Best of Friends", date: "09.03.2023" },
+                    { number: 7, name: "Good Man, Cruel World", date: "09.03.2023" },
+                    { number: 8, name: "Where Are You Going...", date: "09.03.2023" },
+                    { number: 9, name: "She's Not There", date: "09.03.2023" },
+                    { number: 10, name: "The Death of Jonathan Moore", date: "09.03.2023" }
+                ]
+            },
+            5: {
+                episodes: [
+                    { number: 1, name: "The Luckiest Guy in NY", date: "2025" },
+                    { number: 2, name: "Blood Will Have Blood", date: "2025" },
+                    { number: 3, name: "Impostor Syndrome", date: "2025" },
+                    { number: 4, name: "My Fair Maddie", date: "2025" },
+                    { number: 5, name: "Last Dance", date: "2025" },
+                    { number: 6, name: "The Dark Face of Love", date: "2025" },
+                    { number: 7, name: "#JoeGoldberg", date: "2025" },
+                    { number: 8, name: "Folie a Deux", date: "2025" },
+                    { number: 9, name: "Trial of the Furies", date: "2025" },
+                    { number: 10, name: "Finale", date: "2025" }
+                ]
+            }
+        };
+
+        let currentSeason = 1;
+        let currentEpisode = 10;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadEpisodesForSeason(currentSeason);
+            updatePlayer(currentSeason, currentEpisode, seasonsData[currentSeason].episodes[currentEpisode-1].name);
+        });
+
+        function changeSeason(season) {
+            currentSeason = season;
+            
+            document.querySelectorAll('.season-tab').forEach(tab => tab.classList.remove('active'));
+            const clickedButton = event.target.closest('.season-tab');
+            if(clickedButton) clickedButton.classList.add('active');
+            
+            loadEpisodesForSeason(season);
+            
+            const firstEp = seasonsData[season].episodes[0];
+            changeEpisode(firstEp.number, firstEp.name);
+        }
+
+        function loadEpisodesForSeason(season) {
+            const episodesGrid = document.getElementById('episodesGrid');
+            episodesGrid.innerHTML = '';
+            
+            episodesGrid.style.opacity = '0';
+            
+            setTimeout(() => {
+                const episodes = seasonsData[season].episodes;
+                
+                episodes.forEach(episode => {
+                    const isActive = (season === currentSeason && episode.number === currentEpisode);
+                    const episodeCard = document.createElement('div');
+                    episodeCard.className = `episode-card ${isActive ? 'active' : ''}`;
+                    episodeCard.onclick = () => changeEpisode(episode.number, episode.name);
+                    
+                    episodeCard.innerHTML = `
+                        <div class="episode-header">
+                            <span class="episode-number">EP ${episode.number}</span>
+                            <i class="fas fa-play play-icon-mini"></i>
+                        </div>
+                        <div class="episode-name">${episode.name}</div>
+                        <div class="episode-date">${episode.date}</div>
+                    `;
+                    episodesGrid.appendChild(episodeCard);
+                });
+                
+                episodesGrid.style.transition = 'opacity 0.3s ease';
+                episodesGrid.style.opacity = '1';
+            }, 200);
+        }
+
+        function changeEpisode(episode, episodeName) {
+            currentEpisode = episode;
+            updatePlayer(currentSeason, episode, episodeName);
+            
+            document.querySelectorAll('.episode-card').forEach(card => {
+                card.classList.remove('active');
+                const epNum = parseInt(card.querySelector('.episode-number').textContent.replace('EP ', ''));
+                if (epNum === episode) {
+                    card.classList.add('active');
+                }
+            });
+        }
+
+        function updatePlayer(season, episode, title) {
+            const iframe = document.getElementById('videoPlayer');
+            iframe.src = `https://api.namy.ws/embed/movie/2397?host=you-smotret.ru&season=${season}&episode=${episode}`;
+            document.getElementById('headerSeason').innerText = season;
+            document.getElementById('headerEpisode').innerText = episode;
+            document.getElementById('headerTitle').innerText = title;
+        }
+    </script>
+</body>
+</html>
