@@ -60,19 +60,27 @@
         .info {
             padding: 20px;
             text-align: center;
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         .info h3 {
             margin: 0;
             font-size: 1.2rem;
         }
         
+        /* Иконки для карточек */
         .p-fan::before { content: '☢'; font-size: 60px; color: #00d2ff; animation: spin 2s linear infinite; }
         .p-clicker::before { content: '●'; font-size: 60px; color: #ff4757; }
         .p-jelly::before { content: 'U'; font-size: 60px; color: #2ed573; transform: scale(1.5, 0.8); }
         .p-draw::before { content: '✎'; font-size: 60px; color: #ffa502; }
         .p-browser::before { content: '🌐'; font-size: 60px; color: #747d8c; }
+        .p-you::before { content: '👁️'; font-size: 60px; color: #ff6b81; }
 
-        @keyframes spin { 100% { transform: rotate(360deg); } }
+        @keyframes spin { 
+            100% { transform: rotate(360deg); } 
+        }
     </style>
 </head>
 <body>
@@ -97,10 +105,10 @@
         <a href="browser.html" class="card">
             <div class="preview p-browser"></div>
             <div class="info"><h3>Ретро Браузер</h3></div>
-        <a href="you.html" class="card">
-            <div class="watch-you(RU)"></div>
-            <div class="info"><h3>Сериал "ТЫ"</h3></div>
         </a>
+        <a href="you.html" class="card">
+            <div class="preview p-you"></div>
+            <div class="info"><h3>Сериал "ТЫ"</h3></div>
         </a>
     </div>
 </body>
